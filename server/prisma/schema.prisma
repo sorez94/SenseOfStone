@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum AuthProvider {
+  PASSWORD
+  GOOGLE
+}
+
+enum MaterialType {
+  STONE
+  WOOD
+  MIXED
+}
+
+enum Availability {
+  IN_STOCK
+  MADE_TO_ORDER
+  OUT_OF_STOCK
+  DISCONTINUED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PricingType {
+  FIXED
+  RANGE
+  ON_REQUEST
+}
+
+enum PreOrderStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique
+  passwordHash      String?
+  role              Role          @default(CUSTOMER)
+  authProvider      AuthProvider  @default(PASSWORD)
+  googleSub         String?       @unique
+  avatarUrl         String?
+  firstName         String?
+  lastName          String?
+  phone             String?
+  addressCity       String?
+  addressLine       String?
+  addressPostalCode String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  refreshTokens RefreshToken[]
+  preOrders     PreOrder[]
+
+  @@index([role])
+}
+
+model RefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        Json
+  description Json?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products Product[]
+
+  @@index([deletedAt])
+  @@index([sortOrder])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  sku         String    @unique
+  title       Json
+  shortDescription Json
+  description Json
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  materialType MaterialType
+  material     Json
+  finish       Json?
+  origin       Json?
+
+  dimLength Float?
+  dimWidth  Float?
+  dimHeight Float?
+  dimWeight Float?
+
+  pricingType    PricingType
+  priceAmount    Int?
+  priceMin       Int?
+  priceMax       Int?
+  referencePrice Int?
+  currency       String @default("IRT")
+
+  specifications Json @default("[]")
+
+  availability Availability
+
+  preOrderEnabled      Boolean @default(false)
+  preOrderMinQuantity  Int     @default(1)
+  preOrderMaxQuantity  Int     @default(1)
+  preOrderLeadTimeDays Int?
+
+  isFeatured Boolean       @default(false)
+  status     ProductStatus @default(DRAFT)
+  tags       String[]      @default([])
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  images  ProductImage[]
+  options ProductOption[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([materialType])
+  @@index([availability])
+  @@index([isFeatured])
+  @@index([referencePrice])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       Json
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductOption {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      Json
+  required  Boolean  @default(false)
+  sortOrder Int      @default(0)
+
+  values ProductOptionValue[]
+
+  @@index([productId])
+}
+
+model ProductOptionValue {
+  id         String        @id @default(cuid())
+  optionId   String
+  option     ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  label      Json
+  priceDelta Int           @default(0)
+  sortOrder  Int           @default(0)
+
+  @@index([optionId])
+}
+
+model PreOrder {
+  id       String         @id @default(cuid())
+  reference String        @unique
+  status   PreOrderStatus @default(PENDING)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  customerSnapshot Json
+  items            Json
+
+  estimatedTotalMin Int?
+  estimatedTotalMax Int?
+  currency          String @default("IRT")
+
+  customerNote String?
+  adminNote    String?
+
+  history Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RevokedAccessToken {
+  jti       String   @id
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}

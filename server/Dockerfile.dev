@@ -1,0 +1,15 @@
+# Development image: hot-reload via ts-node-dev. Source is bind-mounted by docker-compose.yml;
+# node_modules stays inside the image/volume so native deps (argon2, sharp) match the container's
+# OS rather than the host's.
+FROM node:22-alpine
+RUN apk add --no-cache openssl
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npx prisma generate
+
+EXPOSE 4000
+CMD ["npm", "run", "start:dev"]
