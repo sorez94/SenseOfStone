@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens derived from the SOS project:
+ *  - sage (#CAD7B2) footer/button colour, sage-line (#BBC3AB) dividers
+ *  - display titles in sage; darkened here (sage-deep) to meet WCAG AA for large text
+ *  - ink (#4B4E53) headings, stone (#4F4F4F) body copy on sage
+ *  - leaf green hover state for buttons/links
+ */
+@theme {
+  --color-sage: #cad7b2;
+  --color-sage-soft: #e7eddc;
+  --color-sage-line: #bbc3ab;
+  --color-sage-title: #c3cdb1;
+  --color-sage-deep: #7a8a5d;
+  --color-ink: #4b4e53;
+  --color-stone: #4f4f4f;
+  --color-leaf: #16a34a;
+  --color-leaf-dark: #15803d;
+  --color-accent-blue: #457eab;
+
+  /* Persian glyphs are missing from Glacier, so Vazirmatn sits in every stack as the per-glyph fallback. */
+  --font-display: var(--font-glacier), var(--font-vazirmatn), ui-serif, Georgia, serif;
+  --font-persian: var(--font-vazirmatn), Tahoma, sans-serif;
+
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+
+  @keyframes slide-down {
+    0% { transform: translateY(-10%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-white text-neutral-900 antialiased;
+    font-family: var(--font-display);
+    overflow-x: hidden;
+  }
+  /* Persian locale: every text (incl. `font-display` headings) uses Vazirmatn with a light, airy feel. */
+  html[lang="fa"] {
+    --font-display: var(--font-persian);
+  }
+  html[lang="fa"] body {
+    font-family: var(--font-persian);
+    font-weight: 300;
+  }
+  input, textarea, select, button {
+    font: inherit;
+  }
+  /*
+   * Typed text picks its direction from its first strong character, so Farsi typed into a field
+   * on the English site renders RTL (in Vazirmatn via the fallback stack) and Latin stays LTR.
+   */
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea {
+    unicode-bidi: plaintext;
+    text-align: start;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-leaf-dark);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+}

@@ -3,8 +3,7 @@ node_modules/
 dist/
 coverage/
 .env
-.env.*.local
+.env*.local
 deploy/.env.deploy
 *.log
 .claude/settings.local.json
-/client/

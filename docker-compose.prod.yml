@@ -2,9 +2,14 @@
 # frontend (Next.js). Plain HTTP (no TLS/reverse-proxy automation) - put Nginx/Caddy or
 # Cloudflare in front later if/when you add a domain + TLS.
 #
-# Usage (see README.md "Deploy to a fresh Linux server" for the full walkthrough):
-#   cp .env.production.example .env   # fill in real secrets/URLs first
-#   docker compose -f docker-compose.prod.yml up -d --build
+# backend/frontend run prebuilt images from GHCR (built + pushed by
+# .github/workflows/deploy.yml), tagged with the exact git commit SHA - see
+# deploy/remote-deploy.sh, which is what actually drives IMAGE_TAG and runs this file.
+#
+# Manual one-off bring-up (no CI): build+push the images yourself first, e.g.
+#   docker build -t ghcr.io/sorez94/senseofstone-server:manual --build-arg GIT_SHA=manual ./server
+#   docker push ghcr.io/sorez94/senseofstone-server:manual
+#   IMAGE_TAG=manual docker compose -f docker-compose.prod.yml up -d
 
 services:
   postgres:

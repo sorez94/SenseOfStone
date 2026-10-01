@@ -25,7 +25,9 @@ RUN npx prisma generate
 
 # ---- runtime: final slim image ----
 FROM base AS runtime
+ARG GIT_SHA=unknown
 ENV NODE_ENV=production
+ENV GIT_SHA=$GIT_SHA
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma

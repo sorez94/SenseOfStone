@@ -16,6 +16,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { PreOrdersModule } from './modules/pre-orders/pre-orders.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { AdminModule } from './modules/admin/admin.module';
     PreOrdersModule,
     ContactModule,
     AdminModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
