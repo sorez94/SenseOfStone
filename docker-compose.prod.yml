@@ -60,9 +60,7 @@ services:
       "
 
   backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: ${SERVER_IMAGE:-ghcr.io/sorez94/senseofstone-server}:${IMAGE_TAG}
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -84,15 +82,9 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_MODE: ${NEXT_PUBLIC_API_MODE}
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-        NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    # NEXT_PUBLIC_* are baked into this image at build time (see .github/workflows/deploy.yml);
+    # they can't be changed by env vars at this layer, only by rebuilding and redeploying.
+    image: ${CLIENT_IMAGE:-ghcr.io/sorez94/senseofstone-client}:${IMAGE_TAG}
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS}

@@ -61,8 +61,15 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    # Two pushes landing close together must not run remote-deploy.sh concurrently against
+    # the same .env/containers - queue them instead of letting them race.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
     steps:
-      - name: Deploy over SSH
+      - uses: actions/checkout@v4
+
+      - name: Sync compose file + deploy scripts, then trigger deploy
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -73,5 +80,16 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY" > /tmp/deploy_key
           mkdir -p ~/.ssh
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # The deploy key is restricted server-side to a forced command (see
+          # deploy/bootstrap-server.sh / deploy/ssh-command-wrapper.sh) that only allows
+          # legacy-protocol scp (-O) through, plus running remote-deploy.sh. This keeps
+          # /opt/sos's compose file and scripts in lockstep with master without ever
+          # giving the production server git credentials for this repo.
+          scp -O -i /tmp/deploy_key -o StrictHostKeyChecking=yes \
+            docker-compose.prod.yml "$SSH_USER@$SSH_HOST:/opt/sos/docker-compose.prod.yml"
+          scp -O -i /tmp/deploy_key -o StrictHostKeyChecking=yes -r \
+            deploy "$SSH_USER@$SSH_HOST:/opt/sos/"
+
           ssh -i /tmp/deploy_key -o StrictHostKeyChecking=yes \
             "$SSH_USER@$SSH_HOST" "${{ github.sha }}"

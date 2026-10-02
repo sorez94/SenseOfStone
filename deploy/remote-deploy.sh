@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Runs ON the production server (not from a dev machine). Invoked over SSH by
-# .github/workflows/deploy.yml via a forced-command key for the `deploy` user, so the only
-# thing this script trusts as "which commit to deploy" is $SSH_ORIGINAL_COMMAND / $1 - both
-# validated below before touching anything.
+# Runs ON the production server (not from a dev machine). Invoked by
+# deploy/ssh-command-wrapper.sh, which is the `deploy` user's SSH forced command, so the
+# only thing this script trusts as "which commit to deploy" is $SSH_ORIGINAL_COMMAND / $1 -
+# both validated below before touching anything.
 #
 # What it does: pg_dump a safety backup, point IMAGE_TAG at the new commit SHA, pull+recreate
 # only backend/frontend (postgres/minio are never touched), health-check, and auto-revert to
